@@ -1,0 +1,41 @@
+services:
+  http-service:
+    build:
+      context: .
+      dockerfile: http-service/Dockerfile
+    container_name: http-service
+    ports:
+      - "3000:3000"
+    healthcheck:
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  ipc-service:
+    build:
+      context: .
+      dockerfile: ipc-service/Dockerfile
+    container_name: ipc-service
+    volumes:
+      - ipc-socket:/tmp
+    healthcheck:
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  client:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+    container_name: client
+    depends_on:
+      - http-service
+      - ipc-service
+    volumes:
+      - ipc-socket:/tmp
+    command: ["client", "compare", "--requests", "100"]
+
+volumes:
+  ipc-socket:
